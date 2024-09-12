@@ -1,0 +1,73 @@
+---
+title: "`blogcard` shortcode"
+date: now
+date-format: "YYYY-MM-DD HH:mm:ss"
+format:
+    html: default
+    typst: default
+filters:
+   - blogcard
+---
+
+# Blogcard Extension For Quarto
+
+`blogcard` shortcode makes easy to produce a card-like link.
+
+## Installing
+
+To use `blogcard` extension in your Quarto project, run this command in terminal at the project's working directory.
+This will install the extension under the `_extensions` subdirectory.
+
+```{.bash}
+quarto add t-arae/blogcard
+```
+
+and then, apply `blogcard` filter by adding this lines into your yaml header of `.qmd` file.
+
+```{.yaml}
+filters:
+  - blogcard
+```
+
+## How to use
+
+To make a card by `blogcard` shortcode, write shortcode directive like this.
+
+```{.markdown}
+{{{< blogcard https://quarto.org >}}}
+```
+
+{{< blogcard https://quarto.org >}}
+
+The first argument of `blogcard` shortcode will be used as the URL.
+You can also pass the URL through the keyword argment like this.
+
+```{.markdown}
+{{{< blogcard url=https://quarto.org >}}}
+or 
+{{{< blogcard url="https://quarto.org" >}}}
+```
+
+{{< blogcard url="https://quarto.org" >}}
+
+## When no open graph protocol tags are found
+
+`blogcard` shortcode uses the content of `<meta>` tag containning the open graph protocol (OGP), to make a card.
+If no OGP contents are found (or failed to get HTML contents),
+it makes a deadly simple card.
+
+```{.markdown}
+{{{< blogcard https://example.com >}}}
+```
+
+{{< blogcard https://example.com >}}
+
+## Manually set the data
+
+You can also set the contents manually through keyword argments.
+
+```{.markdown}
+{{{< blogcard https://example.com title="This is title" description="No description" image="https://via.placeholder.com/300x200" >}}}
+```
+
+{{< blogcard https://example.com title="This is title" description="No description" image="https://via.placeholder.com/300x200" >}}
