@@ -8,7 +8,8 @@ function extract_inside_head(url)
   if not status then
     return "<meta >"
   end
-  return string.match(contents, "<head>(.-)</head>")
+  -- print("head: ", string.match(contents, "<head.->(.-)</head>"))
+  return string.match(contents, "<head.->(.-)</head>")
 end
 
 --Get a generator generates inside string in meta tags from the string inside head tag 
