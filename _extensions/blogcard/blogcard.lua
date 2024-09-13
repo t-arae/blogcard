@@ -110,6 +110,43 @@ local function compile_template(filename, context)
   return rendered
 end
 
+Templates = {
+  template1 = {
+    html = quarto.utils.resolve_path("assets/template1/template.html"),
+    css = {quarto.utils.resolve_path("assets/template1/template.css")}
+  },
+  template2 = {
+    html = quarto.utils.resolve_path("assets/template2/template.html"),
+    css = {quarto.utils.resolve_path("assets/template2/template.css")}
+  },
+}
+
+Template = {}
+function Template:new()
+  newObj = {tname = "", html = "", css = ""}
+  self.__index = self
+  return setmetatable(newObj, self)
+end
+
+function Template:set_default(key)
+  self.tname = key
+  for k, v in pairs(Templates[key]) do
+    self[k] = v
+  end
+end
+
+function Template:get_tname()
+  return self.tname
+end
+
+function Template:get_html()
+  return self.html
+end
+
+function Template:get_css()
+  return self.css
+end
+
 --- Filter ---
 
 return {
@@ -127,9 +164,21 @@ return {
     ogp:fill_from_kwargs(kwargs)
     ogp:print()
 
-    if quarto.doc.isFormat('html') then
-      local t = quarto.utils.resolve_path("assets/template1.html")
-      local compiled = compile_template(t, ogp)
+    if quarto.doc.isFormat('html') and quarto.doc.has_bootstrap() then
+      local tname = ""
+      tname = pandoc.utils.stringify(kwargs["tname"])
+      if tname == "" then
+        tname = "template1"
+      end
+      local t = Template:new()
+      t:set_default(tname)
+
+      quarto.doc.addHtmlDependency({
+        name = t:get_tname(),
+        version = "1.0.0",
+        stylesheets = t:get_css()
+      })
+      local compiled = compile_template(t:get_html(), ogp)
       return pandoc.RawBlock("html", compiled)
     else
       -- fall back to insert a form feed character
