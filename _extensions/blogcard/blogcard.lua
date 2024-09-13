@@ -54,14 +54,20 @@ end
 
 --Fill the OGPdata members with data from meta tag
 --@param meta string A string inside the <meta ..>
-function OGPdata:fill_from_meta(meta)
+function OGPdata:fill_from_meta(metas)
   local get_pattern = function(k)
-    return "property=\"og:" .. k .. "\" content=\"(.-)\""
+    return "property=\"og:" .. k .. "\".- content=\"(.-)\""
   end
+
+  local lines = {}
+  for meta in metas do
+    table.insert(lines, meta)
+  end
+  local metas_cat = table.concat(lines, "\n")
 
   for k, _ in pairs(self) do
     local p = get_pattern(k)
-    local v = meta:match(p)
+    local v = metas_cat:match(p)
     if v ~= nil then
       self[k] = v
     end
@@ -115,7 +121,9 @@ return {
     end
     local str_head = extract_inside_head(url)
     local gen_str_meta = get_inside_meta(str_head)
-    local ogp = constract_ogp_data(gen_str_meta, url)
+    local ogp = OGPdata:new()
+    ogp["link"] = url
+    ogp:fill_from_meta(gen_str_meta)
     ogp:fill_from_kwargs(kwargs)
     ogp:print()
 
