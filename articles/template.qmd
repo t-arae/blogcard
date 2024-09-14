@@ -1,0 +1,60 @@
+---
+title: "Customize card design"
+date: now
+toc: true
+format:
+    html: default
+filters:
+   - t-arae/blogcard
+engine: knitr
+---
+
+The `blogcard` shortcode makes it easy to create a card-like link.
+
+## Select card template
+
+You can select a template using the `tname` attribute.
+Built-in templates are below:
+
+##### `tname="default"`
+
+```{.markdown}
+{{{< blogcard https://quarto.org tname="default" >}}}
+```
+
+{{< blogcard https://quarto.org tname="default" >}}
+
+##### `tname="mini"`
+
+```{.markdown}
+{{{< blogcard https://quarto.org tname="mini" >}}}
+```
+
+{{< blogcard https://quarto.org tname="mini" >}}
+
+##### `tname="tiny"`
+
+```{.markdown}
+{{{< blogcard https://quarto.org tname="tiny" >}}}
+```
+
+{{< blogcard https://quarto.org tname="tiny" >}}
+
+## Directory structure of built-in templates
+
+Built-in templates are located in `/_extensions/blogcard/assets/`.
+
+```{bash}
+#| echo: false
+tree ../_extensions/blogcard/assets
+```
+
+An example of HTML and CSS files for a template using the built-in 'tiny' template.
+
+```{.html filename="tiny/template.html"}
+{{< include ../_extensions/blogcard/assets/tiny/template.html >}}
+```
+
+```{.css filename="tiny/template.css"}
+{{< include ../_extensions/blogcard/assets/tiny/template.css >}}
+```
