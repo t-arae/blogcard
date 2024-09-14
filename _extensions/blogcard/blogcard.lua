@@ -83,12 +83,12 @@ local get_favicon_link = function(x, url)
 
   -- extract favicon link
   local link_favicon = x:match("<link([^>]- rel=\"icon\"[^>]-)>") or ""
-  print(link_favicon)
   link_favicon = link_favicon:match("href=\"(.-)\"") or ""
-
+  
   if link_favicon ~= "" then
     if (not is_absolute(link_favicon)) then
-      link_favicon = pandoc.path.join({url, link_favicon})
+      local resource_dir = (url:match("html$")) and pandoc.path.directory(url) or url
+      link_favicon = pandoc.path.join({resource_dir, link_favicon})
     end
   else
     link_favicon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAAAAACo4kLRAAAAL0lEQVR42mP4jwUwUEeQAQTQBBkYkEUZkMVgogwoYlBRmglitR27O7H7iCZBhwIAfn4t4TicsrEAAAAASUVORK5CYII="
@@ -142,7 +142,6 @@ function load_templates(asset_dir)
 
   local templates = {}
   for _, v in pairs(pandoc.system.list_directory(asset_dir)) do
-    print(pandoc.path.join({asset_dir, v}))
     local temp_dir = pandoc.path.join({asset_dir, v})
     local temp_table = {}
     for _, u in pairs(pandoc.system.list_directory(temp_dir)) do
