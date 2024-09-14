@@ -37,6 +37,7 @@ function OGPdata:print()
   for k, v in pairs(self) do
     print(k .. ": " .. v)
   end
+  print ""
 end
 
 --Fill the OGPdata members with data from keyword args
@@ -74,15 +75,25 @@ function OGPdata:fill_from_meta(metas)
   end
 end
 
-function constract_ogp_data(metas, url)
-  local ogp = OGPdata:new()
-  ogp["link"] = url
-  for m in metas do
-    if m:match("property=\"og") then
-      ogp:fill_from_meta(m)
-    end
+local get_favicon_link = function(x, url)
+  -- check whether the favicon URL is absolute or not
+  local is_absolute = function(x)
+    return (string.find(x, "^http")) and true or false
   end
-  return ogp
+
+  -- extract favicon link
+  local link_favicon = x:match("<link(.- rel=\"icon\".-)>") or ""
+  link_favicon = link_favicon:match("href=\"(.-)\"") or ""
+
+  if link_favicon ~= "" then
+    if (not is_absolute(link_favicon)) then
+      link_favicon = pandoc.path.join({url, link_favicon})
+    end
+  else
+    link_favicon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAAAAACo4kLRAAAAL0lEQVR42mP4jwUwUEeQAQTQBBkYkEUZkMVgogwoYlBRmglitR27O7H7iCZBhwIAfn4t4TicsrEAAAAASUVORK5CYII="
+  end
+
+  return link_favicon
 end
 
 --- Functions for templates ---
@@ -110,16 +121,40 @@ local function compile_template(filename, context)
   return rendered
 end
 
-Templates = {
-  template1 = {
-    html = quarto.utils.resolve_path("assets/template1/template.html"),
-    css = {quarto.utils.resolve_path("assets/template1/template.css")}
-  },
-  template2 = {
-    html = quarto.utils.resolve_path("assets/template2/template.html"),
-    css = {quarto.utils.resolve_path("assets/template2/template.css")}
-  },
-}
+function dump(o)
+  if type(o) == 'table' then
+     local s = '{\n    '
+     for k,v in pairs(o) do
+        if type(k) ~= 'number' then k = '"'..k..'"' end
+        s = s .. '['..k..'] = ' .. dump(v) .. ',\n    '
+     end
+     return s .. '}\n    '
+  else
+     return tostring(o)
+  end
+end
+
+function load_templates(asset_dir)
+  if asset_dir == nil then
+    asset_dir = quarto.utils.resolve_path("assets")
+  end
+
+  local templates = {}
+  for _, v in pairs(pandoc.system.list_directory(asset_dir)) do
+    print(pandoc.path.join({asset_dir, v}))
+    local temp_dir = pandoc.path.join({asset_dir, v})
+    local temp_table = {}
+    for _, u in pairs(pandoc.system.list_directory(temp_dir)) do
+      local k = u:match("[a-z]-$")
+      temp_table[k] = pandoc.path.join({temp_dir, u})
+    end
+    templates[v] = temp_table
+  end
+  return templates
+end
+
+-- print(dump(load_templates()))
+Templates = load_templates()
 
 Template = {}
 function Template:new()
@@ -144,7 +179,7 @@ function Template:get_html()
 end
 
 function Template:get_css()
-  return self.css
+  return {self.css}
 end
 
 --- Filter ---
@@ -160,6 +195,7 @@ return {
     local gen_str_meta = get_inside_meta(str_head)
     local ogp = OGPdata:new()
     ogp["link"] = url
+    ogp["favicon"] = get_favicon_link(str_head, url)
     ogp:fill_from_meta(gen_str_meta)
     ogp:fill_from_kwargs(kwargs)
     ogp:print()
@@ -168,7 +204,7 @@ return {
       local tname = ""
       tname = pandoc.utils.stringify(kwargs["tname"])
       if tname == "" then
-        tname = "template1"
+        tname = "default"
       end
       local t = Template:new()
       t:set_default(tname)

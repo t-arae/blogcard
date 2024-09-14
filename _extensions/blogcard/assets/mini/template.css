@@ -1,0 +1,39 @@
+.text-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.card-horizontal-thin {
+    display: flex;
+    align-items: center;
+    height: 65px;
+}
+.card-body-thin {
+    padding: 5px 15px;
+    width: 100%;
+}
+.card-title-thin {
+    font-size: 16px;
+    margin-top: 4px;
+    margin-bottom: 0px;
+}
+.card-url-thin {
+    font-size: 14px;
+    margin-top: 2px;
+    margin-bottom: 0px;
+    color: #007bff;
+}
+.card-description-thin {
+    font-size: 14px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    color: #6c757d;
+}
+
+.favicon-thin {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
