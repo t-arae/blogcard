@@ -1,0 +1,35 @@
+project:
+  type: website
+  render:
+    - "*.qmd"
+
+website:
+  title: "blogcard"
+  description: "blogcard shortcode, a quarto shortcode extension, makes easy to produce a card-like link."
+  favicon: "favicon.ico"
+  image: "beko.jpeg"
+  site-url: 'https://t-arae.quarto.pub/blogcard/'
+  site-path: '/'
+  navbar:
+    left:
+      - href: index.qmd
+        text: About
+      - text: Usage
+        menu:
+          - href: articles/example.qmd 
+            text: Example
+          - href: articles/template.qmd 
+            text: Templates
+    right:
+      - icon: github
+        href: https://github.com/t-arae/blogcard
+  open-graph:
+    image: "beko.jpeg"
+
+format:
+  html:
+    theme:
+      light: flatly
+  typst: default
+
+editor: source
