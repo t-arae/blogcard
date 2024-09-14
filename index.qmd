@@ -1,0 +1,54 @@
+---
+title: "`blogcard` shortcode"
+description-meta: "The `blogcard` shortcode, a Quarto shortcode extension, makes it easy to create a card-like link."
+date: now
+toc: true
+format:
+    html: default
+filters:
+   - t-arae/blogcard
+engine: knitr
+---
+
+# Blogcard Extension For Quarto
+
+The `blogcard` shortcode makes it easy to create a card-like link.
+
+{{< blogcard https://t-arae.quarto.pub/blogcard/ >}}
+
+The version of Quarto built-in Pandoc and Lua:
+
+```{bash}
+quarto pandoc --version 2>&1 | head -3
+```
+
+## Instalation
+
+To use the `blogcard` extension in your Quarto project, run this command in the terminal from the project's working directory.
+This will install the extension under the `_extensions` subdirectory.
+
+```bash
+quarto add t-arae/blogcard
+```
+
+Then, apply the `blogcard` filter by adding the following lines to the YAML header of your `.qmd` file.
+
+```yaml
+filters:
+  - t-arae/blogcard
+```
+
+## Using
+
+To create a card using the `blogcard` shortcode, write the shortcode directive like this:
+
+```markdown
+{{{< blogcard https://quarto.org >}}}
+```
+
+## Example
+
+Here is the source code for a minimal example: [example.qmd](articles/example.qmd).
+
+The rendered version is available [here](https://t-arae.quarto.pub/blogcard/example.html).
+
