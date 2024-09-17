@@ -82,7 +82,7 @@ local get_favicon_link = function(x, url)
   end
 
   -- extract favicon link
-  local link_favicon = x:match("<link([^>]- rel=\"icon\"[^>]-)>") or ""
+  local link_favicon = x:match("<link([^>]- rel=\"[^\"]-icon\"[^>]-)>") or ""
   link_favicon = link_favicon:match("href=\"(.-)\"") or ""
   
   if link_favicon ~= "" then
