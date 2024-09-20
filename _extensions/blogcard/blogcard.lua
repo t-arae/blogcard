@@ -20,6 +20,38 @@ function get_inside_meta(in_head)
   return f
 end
 
+function extract_all_meta_tags(in_head)
+  local pos = 1
+  local meta_tags = {}
+  while true do
+      local start_pos, end_pos = in_head:find("<meta%s", pos)
+      if not start_pos then
+          break  -- 全ての<meta>タグを検索済み
+      end
+
+      local in_quote = false
+      local quote_char = ''
+      local i = end_pos + 1
+      while i <= #in_head do
+          local char = in_head:sub(i,i)
+          if not in_quote and (char == '"' or char == "'") then
+              in_quote = true
+              quote_char = char
+          elseif in_quote and char == quote_char then
+              in_quote = false
+          elseif not in_quote and char == '>' then
+              local meta_tag = in_head:sub(start_pos, i)
+              table.insert(meta_tags, meta_tag)
+              pos = i + 1
+              break
+          end
+          i = i + 1
+      end
+      pos = end_pos + 1
+  end
+  return meta_tags
+end
+
 --- OGPdata: Data for the Open Graph Protocol ---
 
 OGPdata = {}
@@ -53,15 +85,48 @@ function OGPdata:fill_from_kwargs(kwargs)
   end
 end
 
+function extract_value(s)
+  local i = 1
+  local len = #s
+  local result = ''
+  local escaping = false
+
+  local c = s:sub(i, i)
+  local quote = c
+  i = i + 1
+
+  while i <= len do
+    c = s:sub(i, i)
+    if c == "\\" then
+      escaping = true
+    elseif c == quote then
+      if escaping then
+        result = result .. "\\" .. c
+        escaping = false
+      else
+        break
+      end
+    else
+      result = result .. c
+    end
+    i = i + 1
+  end
+  return result
+end
+
+--print(extract_value('"hello \\"world" !!'))
+--print(extract_value("'hello \\'world' !!"))
+
 --Fill the OGPdata members with data from meta tag
 --@param meta string A string inside the <meta ..>
 function OGPdata:fill_from_meta(metas)
   local get_pattern = function(k)
-    return "property=\"og:" .. k .. "\".- content=\"(.-)\""
+    --return "property=\"og:" .. k .. "\".- content=\"(.-)\""
+    return "property=\"og:" .. k .. "\".- content=([\"'].*)"
   end
 
   local lines = {}
-  for meta in metas do
+  for _, meta in pairs(metas) do
     table.insert(lines, meta)
   end
   local metas_cat = table.concat(lines, "\n")
@@ -70,25 +135,42 @@ function OGPdata:fill_from_meta(metas)
     local p = get_pattern(k)
     local v = metas_cat:match(p)
     if v ~= nil then
-      self[k] = v
+      self[k] = extract_value(v)
     end
   end
 end
 
-local get_favicon_link = function(x, url)
+local get_url_path = function(url)
+  if url:match("[#]") then
+    url = url:match("^(.*)[#]")
+  end
+  return url
+end
+
+local get_favicon_link = function(x, url, isfile)
   -- check whether the favicon URL is absolute or not
   local is_absolute = function(x)
     return (string.find(x, "^http")) and true or false
   end
 
   -- extract favicon link
+  -- rel="(shortcut ){0,1}icon"
   local link_favicon = x:match("<link([^>]- rel=\"[^\"]-icon\"[^>]-)>") or ""
   link_favicon = link_favicon:match("href=\"(.-)\"") or ""
   
   if link_favicon ~= "" then
     if (not is_absolute(link_favicon)) then
-      local resource_dir = (url:match("html$")) and pandoc.path.directory(url) or url
-      link_favicon = pandoc.path.join({resource_dir, link_favicon})
+      local resource_dir = isfile and pandoc.path.directory(url) or url
+      if (string.match(link_favicon, "^/")) then
+        print("Here !!!")
+        link_favicon = link_favicon:match("^/*(.*)")
+        resource_dir = resource_dir:match("(https-://[^/]-/)")
+      end
+      resource_dir = get_url_path(resource_dir)
+      if resource_dir:match("[#]") then
+        resource_dir = resource_dir:match("^(.*)[#]")
+      end
+      link_favicon = pandoc.path.join({resource_dir, pandoc.path.normalize(link_favicon)})
     end
   else
     link_favicon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAAAAACo4kLRAAAAL0lEQVR42mP4jwUwUEeQAQTQBBkYkEUZkMVgogwoYlBRmglitR27O7H7iCZBhwIAfn4t4TicsrEAAAAASUVORK5CYII="
@@ -192,10 +274,23 @@ return {
       url = args[1]
     end
     local str_head = extract_inside_head(url)
-    local gen_str_meta = get_inside_meta(str_head)
+    --local gen_str_meta = get_inside_meta(str_head)
+    local gen_str_meta = extract_all_meta_tags(str_head)
     local ogp = OGPdata:new()
     ogp["link"] = url
-    ogp["favicon"] = get_favicon_link(str_head, url)
+
+    local isfile = false
+    local kwarg_isfile = pandoc.utils.stringify(kwargs["isfile"])
+
+    local url_path = get_url_path(url)
+    isfile = (url_path:match("html$")) and true or false
+    isfile = kwarg_isfile == "true" and true or isfile
+    isfile = kwarg_isfile == "false" and false or isfile
+
+    print("kwargs.isfile: " .. kwarg_isfile)
+    print("isfile: ", isfile)
+
+    ogp["favicon"] = get_favicon_link(str_head, url, isfile)
     ogp:fill_from_meta(gen_str_meta)
     ogp:fill_from_kwargs(kwargs)
     ogp:print()
